@@ -1,0 +1,64 @@
+🟦 DAY 1 – Monday
+⏰ 8:00 – 9:00 | Java Basics Warmup
+Data types, operators
+
+
+Convert small snippets from PHP → Java (helps transition)
+
+
+⏰ 9:00 – 10:00 | Java Practice
+Write simple programs:
+max of 3 numbers
+
+
+sum of array
+
+
+factorial
+
+
+reverse string
+
+
+⏰ 10:00 – 11:30 | DSA – Arrays
+Learn approach
+
+
+Solve 2 easy problems on LeetCode / CodeStudio
+
+
+Two Sum
+
+
+Max Consecutive Ones
+
+
+⏰ 11:30 – 12:00 | Notes + Dry Run Habit
+Write dry runs in notebook
+
+
+⏰ 12:00 – 1:00 | BREAK
+⏰ 1:00 – 2:00 | Java – Loops & Patterns
+Solve 10 loop exercises.
+⏰ 2:00 – 3:30 | Spring Boot – Setup
+Install JDK, IntelliJ
+
+
+Create new Spring Boot project
+
+
+Understand pom.xml/reactor
+
+
+Build first endpoint: /hello
+
+
+⏰ 3:30 – 4:00 | Break
+⏰ 4:00 – 6:00 | Revision + Rewriting
+Rewrite all code from scratch (VERY important habit)
+⏰ 6:00 – 6:30 | Light walk
+⏰ 6:30 – 8:00 | Optional Extra Practice
+Re-solve 1 DSA problem
+
+
+Read Java docs for 20 mins
