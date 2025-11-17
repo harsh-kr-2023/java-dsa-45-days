@@ -1,0 +1,134 @@
+🟦 DAY 1 — Monday (Today)
+🎯 Goal: Finish Java OOP + get comfortable with writing clean code + start Spring Boot
+
+⏰ 8:00 – 9:00 → Java OOP Revision + 3 programs
+Write clean code:
+Constructor
+
+
+super
+
+
+overriding
+
+
+dynamic dispatch
+
+
+polymorphic arrays
+
+
+Programs to write:
+Vehicle–Car–Bike (override start())
+
+
+Shape–Circle–Square (area calculation)
+
+
+Company–Employee–Manager (salary + bonus)
+
+
+
+⏰ 9:00 – 10:30 → DSA: Sliding Window (Core)
+Learn & solve:
+Max Sum Subarray of size k
+
+
+Longest Substring Without Repeating Characters (medium)
+
+
+Longest Subarray of 1s after K flips (hard pattern)
+
+
+Solve 3 problems fully.
+
+⏰ 10:30 – 11:15 → Sliding Window Notes + Dry Run
+Write how sliding window works
+ Practice dry run on paper (mandatory)
+
+⏰ 11:15 – 12:45 → Start Spring Boot
+Install + Setup:
+Install IntelliJ
+
+
+Setup Spring Boot project
+
+
+Understand pom.xml
+
+
+Create first controller
+
+
+Build /hello endpoint
+
+
+Build /status endpoint
+
+
+
+⏰ 12:45 – 1:30 → Lunch Break
+
+⏰ 1:30 – 3:00 → Spring Boot Inputs
+Learn:
+@RestController
+
+
+@GetMapping
+
+
+@PostMapping
+
+
+PathVariable
+
+
+RequestParam
+
+
+Build 3 APIs:
+/add?x=3&y=4
+
+
+/user/{id}
+
+
+/search?query=name
+
+
+
+⏰ 3:00 – 5:00 → Java Practice + Patterns
+Do 8 pattern problems:
+square
+
+
+triangle
+
+
+pyramid upside down
+
+
+number patterns
+
+
+star patterns
+
+⏰ 5:00 – 6:00 → DSA Rewriting (VERY IMPORTANT)
+Rewrite today’s DSA code without looking.
+
+⏰ 6:00 – 7:00 → Light walk + relax
+
+⏰ 7:00 – 8:00 → Git + LinkedIn Post
+Push all today’s code
+
+
+Post “Day 3 of 45” progress
+
+
+
+📌 DAY 1 Summary Goal:
+🔹 Finish OOP rewriting
+ 🔹 Master sliding window basics
+ 🔹 Build first Spring Boot APIs
+ 🔹 Complete 8 pattern questions
+ 🔹 Git + LinkedIn consistency
