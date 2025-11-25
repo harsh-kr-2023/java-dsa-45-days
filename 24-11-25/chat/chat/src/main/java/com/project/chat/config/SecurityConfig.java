@@ -28,10 +28,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()     // Auth endpoints public
-                        .requestMatchers("/api/debug-auth").permitAll()  // Keep debug public for now
-                        .requestMatchers("/api/token-info").permitAll()  // Keep token info public
-                        .anyRequest().authenticated()  // PROTECT all other endpoints!
+                        .requestMatchers("/api/auth/**").permitAll()     // Auth endpoints
+                        .requestMatchers("/dashboard.html").permitAll()  // ← ADD THIS
+                        .requestMatchers("/**.html").permitAll()         // ← ADD THIS (all HTML files)
+                        .requestMatchers("/**.css").permitAll()          // ← ADD THIS (all CSS files)
+                        .requestMatchers("/**.js").permitAll()           // ← ADD THIS (all JS files)
+                        .requestMatchers("/ws/**").permitAll()           // ← ADD THIS (WebSocket)
+                        .requestMatchers("/webjars/**").permitAll()      // ← ADD THIS (if using webjars)
+                        .anyRequest().authenticated()  // Protect API endpoints only
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Board - Real-Time Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-section {
+            background: #34495e;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .auth-section input {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .auth-section button {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .auth-section button:hover {
+            background: #c0392b;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .projects-grid, .tasks-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .project-card, .task-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .task-card.todo { border-left-color: #e74c3c; }
+        .task-card.in_progress { border-left-color: #f39c12; }
+        .task-card.done { border-left-color: #27ae60; }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 60px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-success { background: #27ae60; }
+        .btn-success:hover { background: #219a52; }
+
+        .btn-danger { background: #e74c3c; }
+        .btn-danger:hover { background: #c0392b; }
+
+        .realtime-section {
+            background: #2c3e50;
+            color: white;
+        }
+
+        #realtimeMessages {
+            height: 200px;
+            overflow-y: auto;
+            background: #1a252f;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .message.create { background: #27ae60; }
+        .message.update { background: #f39c12; }
+        .message.delete { background: #e74c3c; }
+        .message.chat { background: #3498db; }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-connected { background: #27ae60; }
+        .status-disconnected { background: #e74c3c; }
+
+        .token-display {
+            background: #1a252f;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            word-break: break-all;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>🚀 Task Board - Real-Time Dashboard</h1>
+        <div>
+            <span class="status-indicator" id="connectionStatus"></span>
+            <span id="connectionText">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div class="auth-section">
+        <input type="text" id="username" placeholder="Username" value="john_doe1">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button onclick="login()">🔐 Login</button>
+        <button onclick="register()">📝 Register</button>
+        <button onclick="logout()" style="background: #95a5a6;">🚪 Logout</button>
+    </div>
+
+    <div class="main-content">
+        <!-- Left Column: Projects & Tasks -->
+        <div>
+            <!-- Projects Section -->
+            <div class="section">
+                <h3>📂 My Projects</h3>
+                <div class="form-group">
+                    <input type="text" id="projectName" placeholder="Project name">
+                    <textarea id="projectDescription" placeholder="Project description"></textarea>
+                    <button class="btn btn-success" onclick="createProject()">Create Project</button>
+                </div>
+                <div id="projectsList" class="projects-grid">
+                    <!-- Projects will appear here -->
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="section">
+                <h3>✅ Project Tasks</h3>
+                <div id="taskForm" style="display: none;">
+                    <div class="form-group">
+                        <input type="text" id="taskTitle" placeholder="Task title">
+                        <textarea id="taskDescription" placeholder="Task description"></textarea>
+                        <select id="taskPriority">
+                            <option value="LOW">Low Priority</option>
+                            <option value="MEDIUM" selected>Medium Priority</option>
+                            <option value="HIGH">High Priority</option>
+                            <option value="URGENT">Urgent</option>
+                        </select>
+                        <button class="btn btn-success" onclick="createTask()">Create Task</button>
+                    </div>
+                </div>
+                <div id="tasksList" class="tasks-grid">
+                    <!-- Tasks will appear here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Real-Time & Chat -->
+        <div>
+            <!-- Real-Time Updates -->
+            <div class="section realaltime-section">
+                <h3>📡 Real-Time Updates</h3>
+                <div id="realtimeMessages">
+                    <!-- Real-time messages will appear here -->
+                </div>
+                <div class="token-display" id="tokenDisplay"></div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="section">
+                <h3>💬 Team Chat</h3>
+                <div class="form-group">
+                    <input type="text" id="chatMessage" placeholder="Type your message...">
+                    <button class="btn" onclick="sendChat()">Send Message</button>
+                </div>
+                <div id="chatMessages" style="height: 150px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                    <!-- Chat messages will appear here -->
+                </div>
+            </div>
+
+            <!-- API Testing -->
+            <div class="section">
+                <h3>🔧 API Testing</h3>
+                <button class="btn" onclick="testAllEndpoints()">Test All Endpoints</button>
+                <button class="btn" onclick="clearData()" style="background: #e74c3c;">Clear All Data</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global variables
+    let currentToken = null;
+    let currentUser = null;
+    let currentProjectId = null;
+    let stompClient = null;
+
+    // WebSocket Connection with JWT
+    function connectWebSocket() {
+        if (!currentToken) {
+            console.log('No token available for WebSocket connection');
+            return;
+        }
+
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+
+        // Add JWT token to connection headers
+        const headers = {
+            'Authorization': 'Bearer ' + currentToken
+        };
+
+        stompClient.connect(headers, function(frame) {
+            updateConnectionStatus(true, 'Connected');
+            addRealtimeMessage('🔗 WebSocket connected successfully', 'chat');
+
+            // Subscribe to task updates
+            stompClient.subscribe('/topic/tasks', function(message) {
+                const update = JSON.parse(message.body);
+                handleTaskUpdate(update);
+            });
+
+            // Subscribe to chat
+            stompClient.subscribe('/topic/chat', function(message) {
+                const chat = JSON.parse(message.body);
+                addChatMessage(chat.user + ': ' + chat.message);
+            });
+
+        }, function(error) {
+            updateConnectionStatus(false, 'Disconnected');
+            console.error('WebSocket error:', error);
+            addRealtimeMessage('❌ WebSocket connection failed', 'chat');
+        });
+    }
+
+    // Authentication Functions
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            addRealtimeMessage('❌ Please enter username and password', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                currentToken = data.token;
+                currentUser = username;
+                document.getElementById('tokenDisplay').style.display = 'block';
+                document.getElementById('tokenDisplay').textContent = 'Token: ' + (currentToken ? currentToken.substring(0, 50) + '...' : 'No token');
+                addRealtimeMessage('✅ Login successful! Welcome ' + username, 'chat');
+
+                // Load projects and connect WebSocket AFTER successful login
+                await loadProjects();
+                connectWebSocket();
+            } else {
+                addRealtimeMessage('❌ Login failed: ' + data.message, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Login error: ' + error, 'chat');
+        }
+    }
+
+    async function register() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            addRealtimeMessage('❌ Please enter username and password', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    email: username + '@example.com',
+                    firstName: 'Test',
+                    lastName: 'User'
+                })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                addRealtimeMessage('✅ Registration successful! Please login.', 'chat');
+                // Auto-fill login form
+                document.getElementById('username').value = username;
+                document.getElementById('password').value = password;
+            } else {
+                addRealtimeMessage('❌ Registration failed: ' + data.message, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Registration error: ' + error, 'chat');
+        }
+    }
+
+    function logout() {
+        currentToken = null;
+        currentUser = null;
+        currentProjectId = null;
+
+        if (stompClient && stompClient.connected) {
+            stompClient.disconnect();
+        }
+
+        document.getElementById('tokenDisplay').style.display = 'none';
+        document.getElementById('projectsList').innerHTML = '';
+        document.getElementById('tasksList').innerHTML = '';
+        document.getElementById('taskForm').style.display = 'none';
+        updateConnectionStatus(false, 'Disconnected');
+        addRealtimeMessage('🚪 Logged out', 'chat');
+    }
+
+    // Project Functions
+    async function loadProjects() {
+        if (!currentToken) {
+            addRealtimeMessage('❌ Please login first', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/projects', {
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const projects = await response.json();
+                displayProjects(projects);
+                addRealtimeMessage('📂 Loaded ' + projects.length + ' projects', 'chat');
+            } else if (response.status === 403) {
+                addRealtimeMessage('❌ Access denied - invalid token', 'chat');
+            } else {
+                addRealtimeMessage('❌ Error loading projects: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error loading projects: ' + error, 'chat');
+        }
+    }
+
+    async function createProject() {
+        if (!currentToken) {
+            addRealtimeMessage('❌ Please login first', 'chat');
+            return;
+        }
+
+        const name = document.getElementById('projectName').value;
+        const description = document.getElementById('projectDescription').value;
+
+        if (!name) {
+            addRealtimeMessage('❌ Project name is required', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/projects', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, description })
+            });
+
+            if (response.ok) {
+                const project = await response.json();
+                addRealtimeMessage('✅ Project created: ' + project.name, 'create');
+                document.getElementById('projectName').value = '';
+                document.getElementById('projectDescription').value = '';
+                loadProjects();
+            } else {
+                addRealtimeMessage('❌ Error creating project: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error creating project: ' + error, 'chat');
+        }
+    }
+
+    function displayProjects(projects) {
+        const container = document.getElementById('projectsList');
+        container.innerHTML = '';
+
+        if (projects.length === 0) {
+            container.innerHTML = '<p>No projects found. Create your first project!</p>';
+            return;
+        }
+
+        projects.forEach(project => {
+            const projectEl = document.createElement('div');
+            projectEl.className = 'project-card';
+            projectEl.innerHTML = `
+                <h4>${project.name}</h4>
+                <p>${project.description || 'No description'}</p>
+                <button class="btn" onclick="selectProject(${project.id})">View Tasks</button>
+            `;
+            container.appendChild(projectEl);
+        });
+    }
+
+    function selectProject(projectId) {
+        currentProjectId = projectId;
+        document.getElementById('taskForm').style.display = 'block';
+        loadTasks(projectId);
+        addRealtimeMessage('📂 Selected project ID: ' + projectId, 'chat');
+    }
+
+    // Task Functions
+    async function loadTasks(projectId) {
+        if (!currentToken) {
+            addRealtimeMessage('❌ Please login first', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/projects/${projectId}/tasks`, {
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const tasks = await response.json();
+                displayTasks(tasks);
+                addRealtimeMessage('✅ Loaded ' + tasks.length + ' tasks', 'chat');
+            } else {
+                addRealtimeMessage('❌ Error loading tasks: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error loading tasks: ' + error, 'chat');
+        }
+    }
+
+    async function createTask() {
+        if (!currentToken || !currentProjectId) {
+            addRealtimeMessage('❌ Please select a project first', 'chat');
+            return;
+        }
+
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const priority = document.getElementById('taskPriority').value;
+
+        if (!title) {
+            addRealtimeMessage('❌ Task title is required', 'chat');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/projects/${currentProjectId}/tasks`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, description, priority })
+            });
+
+            if (response.ok) {
+                const task = await response.json();
+                addRealtimeMessage('✅ Task created: ' + task.title, 'create');
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskDescription').value = '';
+                loadTasks(currentProjectId);
+            } else {
+                addRealtimeMessage('❌ Error creating task: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error creating task: ' + error, 'chat');
+        }
+    }
+
+    function displayTasks(tasks) {
+        const container = document.getElementById('tasksList');
+        container.innerHTML = '';
+
+        if (tasks.length === 0) {
+            container.innerHTML = '<p>No tasks in this project. Create the first task!</p>';
+            return;
+        }
+
+        tasks.forEach(task => {
+            const taskEl = document.createElement('div');
+            taskEl.className = `task-card ${task.status?.toLowerCase()}`;
+            taskEl.innerHTML = `
+                <h4>${task.title}</h4>
+                <p>${task.description || 'No description'}</p>
+                <div>
+                    <small>Status: ${task.status} | Priority: ${task.priority}</small>
+                </div>
+                <button class="btn" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')">Start</button>
+                <button class="btn btn-success" onclick="updateTaskStatus(${task.id}, 'DONE')">Complete</button>
+                <button class="btn btn-danger" onclick="deleteTask(${task.id})">Delete</button>
+            `;
+            container.appendChild(taskEl);
+        });
+    }
+
+    async function updateTaskStatus(taskId, status) {
+        try {
+            const response = await fetch(`/api/projects/${currentProjectId}/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status })
+            });
+
+            if (response.ok) {
+                addRealtimeMessage('🔄 Task status updated to: ' + status, 'update');
+                loadTasks(currentProjectId);
+            } else {
+                addRealtimeMessage('❌ Error updating task: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error updating task: ' + error, 'chat');
+        }
+    }
+
+    async function deleteTask(taskId) {
+        try {
+            const response = await fetch(`/api/projects/${currentProjectId}/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                addRealtimeMessage('🗑️ Task deleted', 'delete');
+                loadTasks(currentProjectId);
+            } else {
+                addRealtimeMessage('❌ Error deleting task: ' + response.status, 'chat');
+            }
+        } catch (error) {
+            addRealtimeMessage('❌ Network error deleting task: ' + error, 'chat');
+        }
+    }
+
+    // Real-Time Handlers
+    function handleTaskUpdate(update) {
+        const message = `📢 ${update.type}: ${update.task?.title || 'Task ' + update.taskId}`;
+        addRealtimeMessage(message, update.type.toLowerCase().split('_')[1]);
+
+        if (currentProjectId && update.projectId === currentProjectId) {
+            loadTasks(currentProjectId);
+        }
+    }
+
+    function sendChat() {
+        if (!stompClient || !stompClient.connected) {
+            addRealtimeMessage('❌ WebSocket not connected', 'chat');
+            return;
+        }
+
+        const message = document.getElementById('chatMessage').value;
+        if (message.trim()) {
+            stompClient.send("/app/chat", {}, JSON.stringify({
+                message: message,
+                user: currentUser || 'Anonymous',
+                timestamp: new Date().toISOString()
+            }));
+            addChatMessage('You: ' + message);
+            document.getElementById('chatMessage').value = '';
+        }
+    }
+
+    // UI Helpers
+    function addRealtimeMessage(message, type) {
+        const container = document.getElementById('realtimeMessages');
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${type}`;
+        messageEl.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+        container.appendChild(messageEl);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function addChatMessage(message) {
+        const container = document.getElementById('chatMessages');
+        const messageEl = document.createElement('div');
+        messageEl.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+        container.appendChild(messageEl);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function updateConnectionStatus(connected, text) {
+        const statusEl = document.getElementById('connectionStatus');
+        const textEl = document.getElementById('connectionText');
+
+        statusEl.className = `status-indicator ${connected ? 'status-connected' : 'status-disconnected'}`;
+        textEl.textContent = text;
+    }
+
+    // Test functions
+    async function testAllEndpoints() {
+        addRealtimeMessage('🧪 Testing all endpoints...', 'chat');
+        await loadProjects();
+        if (currentProjectId) {
+            await loadTasks(currentProjectId);
+        }
+        addRealtimeMessage('✅ Endpoint testing complete', 'chat');
+    }
+
+    function clearData() {
+        document.getElementById('realtimeMessages').innerHTML = '';
+        document.getElementById('chatMessages').innerHTML = '';
+        addRealtimeMessage('🧹 All data cleared', 'chat');
+    }
+
+    // Initialize - Don't connect WebSocket until login
+    updateConnectionStatus(false, 'Disconnected - Please login');
+    addRealtimeMessage('👋 Welcome! Please login to start', 'chat');
+</script>
+</body>
+</html>
