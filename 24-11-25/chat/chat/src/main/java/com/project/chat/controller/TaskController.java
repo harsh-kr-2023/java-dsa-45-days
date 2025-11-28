@@ -133,4 +133,42 @@ public class TaskController {
 
         return ResponseEntity.ok().build();
     }
+
+    // Add this to your existing TaskController.java
+    @PutMapping("/{taskId}/assign")
+    public ResponseEntity<Task> assignTask(@PathVariable Long projectId,
+                                           @PathVariable Long taskId,
+                                           @RequestParam Long userId) {
+        // Security check
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        // Check if user owns the project
+        if (!task.getProject().getOwner().getUsername().equals(username)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        User assignee = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        task.setAssignedTo(assignee);
+        Task updatedTask = taskRepository.save(task);
+
+        // Real-time notification
+        messagingTemplate.convertAndSend("/topic/tasks", (Object) Map.of(
+                "type", "TASK_ASSIGNED",
+                "task", updatedTask,
+                "assignee", assignee.getUsername(),
+                "projectId", projectId
+        ));
+
+        return ResponseEntity.ok(updatedTask);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Task>> searchTasks(@RequestParam String query) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<Task> tasks = taskRepository.searchTasks(username, query);
+        return ResponseEntity.ok(tasks);
+    }
 }

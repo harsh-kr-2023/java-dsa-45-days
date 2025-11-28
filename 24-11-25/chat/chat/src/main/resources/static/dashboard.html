@@ -723,6 +723,36 @@
     // Initialize - Don't connect WebSocket until login
     updateConnectionStatus(false, 'Disconnected - Please login');
     addRealtimeMessage('👋 Welcome! Please login to start', 'chat');
+
+    // Add to UI - Quick Search
+function addSearchFeature() {
+    const searchHTML = `
+        <div class="section">
+            <h3>🔍 Search Tasks</h3>
+            <input type="text" id="searchInput" placeholder="Search tasks..." onkeyup="searchTasks()">
+            <div id="searchResults"></div>
+        </div>
+    `;
+    document.querySelector('.main-content').insertAdjacentHTML('afterbegin', searchHTML);
+}
+
+async function searchTasks() {
+    const query = document.getElementById('searchInput').value;
+    if (query.length < 2) return;
+
+    try {
+        const response = await fetch(`/api/projects/search?query=${encodeURIComponent(query)}`, {
+            headers: { 'Authorization': 'Bearer ' + currentToken }
+        });
+
+        if (response.ok) {
+            const tasks = await response.json();
+            displaySearchResults(tasks);
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
 </script>
 </body>
 </html>

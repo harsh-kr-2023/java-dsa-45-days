@@ -53,4 +53,10 @@ public class Task {
     public enum Priority {
         LOW, MEDIUM, HIGH, URGENT
     }
+
+    private String attachmentUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_to")
+    private User assignedTo;
 }
