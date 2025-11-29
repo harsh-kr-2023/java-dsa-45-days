@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatFlow - Secure Messaging</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chat-bubble {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+<div class="max-w-md w-full space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+        <div class="mx-auto h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+            <i class="fas fa-comments text-3xl text-purple-600"></i>
+        </div>
+        <h2 class="mt-6 text-3xl font-extrabold text-white">
+            Welcome to ChatFlow
+        </h2>
+        <p class="mt-2 text-sm text-purple-100">
+            Secure real-time messaging
+        </p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-8 space-y-6">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200">
+                <button id="loginTab"
+                        class="flex-1 py-2 px-4 text-center font-medium text-purple-600 border-b-2 border-purple-600">
+                    Sign In
+                </button>
+                <button id="registerTab"
+                        class="flex-1 py-2 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent">
+                    Sign Up
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginUsername" class="sr-only">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input id="loginUsername" name="username" type="text" required
+                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                               placeholder="Username" value="john_doe">
+                    </div>
+                </div>
+                <div>
+                    <label for="loginPassword" class="sr-only">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="loginPassword" name="password" type="password" required
+                               class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                               placeholder="Password" value="password123">
+                    </div>
+                </div>
+                <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition duration-200">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="space-y-4 hidden">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="registerUsername" class="sr-only">Username</label>
+                        <input id="registerUsername" name="username" type="text" required
+                               class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                               placeholder="Username">
+                    </div>
+                    <div>
+                        <label for="registerEmail" class="sr-only">Email</label>
+                        <input id="registerEmail" name="email" type="email" required
+                               class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                               placeholder="Email">
+                    </div>
+                </div>
+                <div>
+                    <label for="registerPassword" class="sr-only">Password</label>
+                    <input id="registerPassword" name="password" type="password" required
+                           class="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                           placeholder="Password">
+                </div>
+                <button type="submit"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-200">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessage" class="hidden p-4 rounded-lg bg-white shadow-lg">
+        <!-- Messages will appear here -->
+    </div>
+</div>
+
+<script>
+    // Global variables
+    let currentToken = null;
+    let currentUser = null;
+
+    // DOM Elements
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // Tab switching
+    loginTab.addEventListener('click', () => {
+        loginTab.classList.add('text-purple-600', 'border-purple-600');
+        loginTab.classList.remove('text-gray-500', 'border-transparent');
+        registerTab.classList.add('text-gray-500', 'border-transparent');
+        registerTab.classList.remove('text-purple-600', 'border-purple-600');
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+    });
+
+    registerTab.addEventListener('click', () => {
+        registerTab.classList.add('text-purple-600', 'border-purple-600');
+        registerTab.classList.remove('text-gray-500', 'border-transparent');
+        loginTab.classList.add('text-gray-500', 'border-transparent');
+        loginTab.classList.remove('text-purple-600', 'border-purple-600');
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+    });
+
+    // Show status message
+    function showStatus(message, type = 'info') {
+        const colors = {
+            success: 'bg-green-100 border-green-400 text-green-700',
+            error: 'bg-red-100 border-red-400 text-red-700',
+            info: 'bg-blue-100 border-blue-400 text-blue-700'
+        };
+
+        statusMessage.className = `p-4 rounded-lg border ${colors[type]} shadow-lg`;
+        statusMessage.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        statusMessage.classList.remove('hidden');
+
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            statusMessage.classList.add('hidden');
+        }, 5000);
+    }
+
+    // Login function
+    async function login(username, password) {
+        try {
+            showStatus('Signing in...', 'info');
+
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                currentToken = data.token;
+                currentUser = data.user;
+                showStatus('Login successful! Redirecting...', 'success');
+
+                // Redirect to chat dashboard
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1000);
+            } else {
+                showStatus(data.message || 'Login failed', 'error');
+            }
+        } catch (error) {
+            showStatus('Network error: ' + error.message, 'error');
+        }
+    }
+
+    // Register function
+    async function register(userData) {
+        try {
+            showStatus('Creating account...', 'info');
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showStatus('Account created successfully! Please sign in.', 'success');
+                // Switch to login tab
+                loginTab.click();
+                // Clear form
+                registerForm.reset();
+            } else {
+                showStatus(data.message || 'Registration failed', 'error');
+            }
+        } catch (error) {
+            showStatus('Network error: ' + error.message, 'error');
+        }
+    }
+
+    // Form event listeners
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(loginForm);
+        const username = formData.get('username');
+        const password = formData.get('password');
+        login(username, password);
+    });
+
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(registerForm);
+        const userData = {
+            username: formData.get('username'),
+            email: formData.get('email'),
+            password: formData.get('password')
+        };
+        register(userData);
+    });
+
+    // Test function (for development)
+    window.testAuth = async function() {
+        const response = await fetch('/api/auth/test', {
+            headers: {
+                'Authorization': 'Bearer ' + currentToken
+            }
+        });
+
+        if (response.ok) {
+            const message = await response.text();
+            showStatus('Auth test: ' + message, 'success');
+        } else {
+            showStatus('Auth test failed', 'error');
+        }
+    };
+</script>
+</body>
+</html>

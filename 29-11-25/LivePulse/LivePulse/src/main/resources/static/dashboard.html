@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatFlow - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 h-screen">
+<div class="flex h-full">
+    <!-- Sidebar -->
+    <div class="w-80 bg-white shadow-lg">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold text-purple-600">
+                    <i class="fas fa-comments mr-2"></i>
+                    ChatFlow
+                </h1>
+                <button id="logoutBtn" class="text-gray-500 hover:text-red-500 transition duration-200">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-purple-600"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 id="userName" class="font-semibold text-gray-800">Loading...</h3>
+                    <p id="userStatus" class="text-sm text-green-500">
+                        <i class="fas fa-circle text-xs mr-1"></i>
+                        Online
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Users -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="relative">
+                <input type="text" id="searchUsers"
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                       placeholder="Search users...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chats List -->
+        <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Recent Chats
+            </h3>
+            <div id="chatsList" class="space-y-2">
+                <!-- Chats will be loaded here -->
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-comments text-3xl mb-2"></i>
+                    <p>No chats yet</p>
+                    <p class="text-sm">Search users to start chatting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 flex flex-col">
+        <!-- Chat Header -->
+        <div class="bg-white shadow-sm border-b border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-green-600"></i>
+                    </div>
+                    <div>
+                        <h2 id="chatWithUser" class="font-semibold text-gray-800">Select a chat</h2>
+                        <p id="chatStatus" class="text-sm text-gray-500">Start a conversation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messagesArea" class="flex-1 bg-gray-50 p-4 overflow-y-auto">
+            <div class="max-w-2xl mx-auto">
+                <div class="text-center text-gray-500 py-12">
+                    <i class="fas fa-comments text-4xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">Welcome to ChatFlow</h3>
+                    <p>Select a user to start chatting</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="bg-white border-t border-gray-200 p-4">
+            <div class="max-w-2xl mx-auto">
+                <div class="flex space-x-4">
+                    <input type="text" id="messageInput"
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                           placeholder="Type a message..." disabled>
+                    <button id="sendMessage"
+                            class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200 disabled:opacity-50"
+                            disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Check if user is logged in
+    const token = localStorage.getItem('chatflow_token');
+    const user = localStorage.getItem('chatflow_user');
+
+    if (!token || !user) {
+        window.location.href = '/index.html';
+    } else {
+        currentToken = token;
+        currentUser = JSON.parse(user);
+
+        // Update UI with user info
+        document.getElementById('userName').textContent = currentUser.username;
+    }
+
+    // Logout function
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('chatflow_token');
+        localStorage.removeItem('chatflow_user');
+        window.location.href = '/index.html';
+    });
+
+    // Update login success to store in localStorage
+    // Add this to your index.html login success handler:
+    // localStorage.setItem('chatflow_token', data.token);
+    // localStorage.setItem('chatflow_user', JSON.stringify(data.user));
+</script>
+</body>
+</html>
