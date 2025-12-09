@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notes App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        input, textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+        button {
+            padding: 10px;
+            background: black;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .note {
+            padding: 10px;
+            border: 1px solid #aaa;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        .note button {
+            background: crimson;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<h2>Edit Note</h2>
+<div id="editSection" style="display:none;">
+    <input type="text" id="editTitle" placeholder="New Title">
+    <textarea id="editContent" rows="3" placeholder="New Content"></textarea>
+    <button onclick="updateNote()">Update</button>
+    <button onclick="cancelEdit()">Cancel</button>
+</div>
+
+<h2>Create Note</h2>
+
+<input type="text" id="title" placeholder="Title">
+<textarea id="content" rows="3" placeholder="Content"></textarea>
+<button onclick="createNote()">Add Note</button>
+
+<h2>All Notes</h2>
+<div id="notes"></div>
+
+<script>
+    const BASE_URL = "http://localhost:8080/api/notes";
+    let editingNoteId = null;
+
+    async function fetchNotes() {
+        const response = await fetch(BASE_URL);
+        const notes = await response.json();
+
+        const container = document.getElementById("notes");
+        container.innerHTML = "";
+
+        notes.forEach(note => {
+            container.innerHTML += `
+                <div class="note">
+                    <h3>${note.title}</h3>
+                    <p>${note.content}</p>
+                    <small>Created: ${note.createdAt}</small><br>
+                    <button onclick="editNote(${note.id}, '${note.title}', '${note.content}')">Edit</button>
+                    <button onclick="deleteNote(${note.id})">Delete</button>
+                </div>
+            `;
+        });
+    }
+
+    async function createNote() {
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+
+        await fetch(BASE_URL, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({title, content})
+        });
+
+        document.getElementById("title").value = "";
+        document.getElementById("content").value = "";
+
+        fetchNotes();
+    }
+
+    async function deleteNote(id) {
+        await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
+        fetchNotes();
+    }
+
+    function editNote(id, title, content) {
+    editingNoteId = id;
+
+    document.getElementById("editTitle").value = title;
+    document.getElementById("editContent").value = content;
+
+    document.getElementById("editSection").style.display = "block";
+}
+
+function cancelEdit() {
+    editingNoteId = null;
+    document.getElementById("editSection").style.display = "none";
+}
+
+async function updateNote() {
+    const title = document.getElementById("editTitle").value;
+    const content = document.getElementById("editContent").value;
+
+    await fetch(`${BASE_URL}/${editingNoteId}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ title, content })
+    });
+
+    // Reset and hide form
+    editingNoteId = null;
+    document.getElementById("editSection").style.display = "none";
+
+    fetchNotes();
+}
+
+
+    // Load notes on page load
+    fetchNotes();
+</script>
+
+</body>
+</html>
+
+
+Implement Queue using Stack
+Implement Stack using Linkedlist
+Implement queue using Linkedlist
