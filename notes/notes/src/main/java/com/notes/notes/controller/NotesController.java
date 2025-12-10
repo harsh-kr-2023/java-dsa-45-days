@@ -1,7 +1,9 @@
 package com.notes.notes.controller;
 
-import com.notes.notes.model.Note;
+import com.notes.notes.dto.NoteRequestDto;
+import com.notes.notes.dto.NoteResponseDto;
 import com.notes.notes.service.NotesService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,24 +19,23 @@ public class NotesController {
     private NotesService notesService;
 
     @GetMapping
-    public ResponseEntity<List<Note>> getNotes() {
-        List<Note> notes = notesService.getAllNotes();
-        return ResponseEntity.ok(notes);
+    public ResponseEntity<List<NoteResponseDto>> getNotes() {
+        return ResponseEntity.ok(notesService.getAllNotes());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Note> getNoteById(@PathVariable Long id) {
+    public ResponseEntity<NoteResponseDto> getNoteById(@PathVariable Long id) {
         return ResponseEntity.ok(notesService.getNoteById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Note> createNote(@RequestBody Note note) {
-        return ResponseEntity.ok(notesService.createNote(note));
+    public ResponseEntity<NoteResponseDto> createNote(@Valid @RequestBody NoteRequestDto dto) {
+        return ResponseEntity.ok(notesService.createNote(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Note> updateNote(@PathVariable Long id, @RequestBody Note note) {
-        return ResponseEntity.ok(notesService.updateNote(id, note));
+    public ResponseEntity<NoteResponseDto> updateNote(@PathVariable Long id, @Valid @RequestBody NoteRequestDto dto) {
+        return ResponseEntity.ok(notesService.updateNote(id, dto));
     }
 
     @DeleteMapping("/{id}")
