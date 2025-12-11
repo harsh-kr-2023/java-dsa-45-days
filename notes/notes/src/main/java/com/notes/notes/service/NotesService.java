@@ -3,9 +3,14 @@ package com.notes.notes.service;
 import com.notes.notes.dto.NoteRequestDto;
 import com.notes.notes.dto.NoteResponseDto;
 import com.notes.notes.exception.NoteNotFoundException;
+import com.notes.notes.mapper.NoteMapper;
 import com.notes.notes.model.Note;
 import com.notes.notes.repository.NotesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,9 +32,18 @@ public class NotesService {
         return mapToResponseDto(saved);
     }
 
-    public List<NoteResponseDto> getAllNotes() {
-        List<Note> notes = notesRepository.findAll();
-        return notes.stream().map(this::mapToResponseDto).toList();
+//    public List<NoteResponseDto> getAllNotes() {
+//        List<Note> notes = notesRepository.findAll();
+//        return notes.stream().map(this::mapToResponseDto).toList();
+//    }
+
+    public Page<NoteResponseDto> getAllNotes(int page, int size, String[] sort) {
+        Sort sortOrder = Sort.by(sort[0]);
+        sortOrder = sort[1].equalsIgnoreCase("desc") ? sortOrder.descending() : sortOrder.ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sortOrder);
+
+        return notesRepository.findAll(pageable).map(NoteMapper::toResponseDto);
     }
 
     public NoteResponseDto getNoteById(Long id) {

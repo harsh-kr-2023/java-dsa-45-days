@@ -5,6 +5,8 @@ import com.notes.notes.dto.NoteResponseDto;
 import com.notes.notes.service.NotesService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +20,14 @@ public class NotesController {
     @Autowired
     private NotesService notesService;
 
+//    @GetMapping
+//    public ResponseEntity<List<NoteResponseDto>> getNotes() {
+//        return ResponseEntity.ok(notesService.getAllNotes());
+//    }
+
     @GetMapping
-    public ResponseEntity<List<NoteResponseDto>> getNotes() {
-        return ResponseEntity.ok(notesService.getAllNotes());
+    public ResponseEntity<Page<NoteResponseDto>> getAllNotes(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "CreatedAt, desc") String[] sort) {
+        return ResponseEntity.ok(notesService.getAllNotes(page, size, sort));
     }
 
     @GetMapping("/{id}")

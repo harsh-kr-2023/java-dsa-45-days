@@ -7,11 +7,11 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            max-width: 600px;
+            max-width: 800px;
             margin: auto;
             background-color: #f5f5f5;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             margin-bottom: 10px;
             padding: 8px;
@@ -29,6 +29,10 @@
         }
         button:hover {
             opacity: 0.9;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         .note {
             padding: 15px;
@@ -97,7 +101,6 @@
         #search {
             margin: 15px 0;
             padding: 10px;
-            width: 100%;
             border: 2px solid #ddd;
         }
         #search:focus {
@@ -110,6 +113,73 @@
             border-radius: 8px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pagination-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .sorting-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .control-group label {
+            font-size: 0.85em;
+            color: #666;
+        }
+        .page-size-control {
+            width: 80px;
+        }
+        .page-nav {
+            display: flex;
+            gap: 5px;
+        }
+        .page-number {
+            min-width: 30px;
+            text-align: center;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .page-number.active {
+            background: black;
+            color: white;
+            border-color: black;
+        }
+        @media (max-width: 768px) {
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .sorting-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .control-group {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -151,20 +221,86 @@
     </div>
 </div>
 
+<!-- Controls Bar: Pagination & Sorting -->
+<div class="controls-bar" id="controlsBar" style="display: none;">
+    <!-- Sorting Controls -->
+    <div class="sorting-controls">
+        <div class="control-group">
+            <label for="sortField">Sort By</label>
+            <select id="sortField" onchange="handleSortChange()">
+                <option value="createdAt">Created Date</option>
+                <option value="title">Title</option>
+                <!-- Add more fields based on your NoteResponseDto -->
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="sortDirection">Direction</label>
+            <select id="sortDirection" onchange="handleSortChange()">
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="pageSize">Page Size</label>
+            <select id="pageSize" class="page-size-control" onchange="handlePageSizeChange()">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Pagination Info & Navigation -->
+    <div class="pagination">
+        <div class="pagination-info" id="paginationInfo">
+            Page 0 of 0 (0 notes)
+        </div>
+        <div class="page-nav">
+            <button id="firstPage" onclick="goToFirstPage()" disabled>«</button>
+            <button id="prevPage" onclick="goToPreviousPage()" disabled>‹</button>
+            <div class="page-number" id="currentPage">0</div>
+            <button id="nextPage" onclick="goToNextPage()" disabled>›</button>
+            <button id="lastPage" onclick="goToLastPage()" disabled>»</button>
+        </div>
+    </div>
+</div>
+
 <!-- Notes List -->
 <div class="section">
-    <h2>📒 All Notes (<span id="noteCount">0</span>)</h2>
+    <h2>📒 Notes</h2>
     <div id="loading" class="loading" style="display: none;">Loading notes...</div>
     <div id="notes"></div>
 </div>
 
 <script>
+    // ==============================================
+    // CONFIGURATION & STATE MANAGEMENT
+    // ==============================================
     const BASE_URL = window.API_BASE_URL || "http://localhost:8080/api/notes";
     let editingNoteId = null;
-    let allNotes = [];
+    let allNotes = []; // For client-side search
     let searchTimeout = null;
 
-    // Utility function to escape HTML
+    // Pagination state
+    let currentPage = 0;
+    let pageSize = 10;
+    let totalPages = 0;
+    let totalElements = 0;
+
+    // Sorting state
+    let sortField = 'createdAt';
+    let sortDirection = 'desc';
+
+    // ==============================================
+    // UTILITY FUNCTIONS
+    // ==============================================
+
+    /**
+     * Escape HTML to prevent XSS attacks
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped HTML string
+     */
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -172,7 +308,11 @@
         return div.innerHTML;
     }
 
-    // Format date
+    /**
+     * Format date to human-readable format
+     * @param {string} dateString - ISO date string
+     * @returns {string} Formatted date string
+     */
     function formatDate(dateString) {
         if (!dateString) return 'Unknown date';
         try {
@@ -200,7 +340,11 @@
         }
     }
 
-    // Show/hide messages
+    /**
+     * Show message to user
+     * @param {string} elementId - ID of message element
+     * @param {string} message - Message to display
+     */
     function showMessage(elementId, message) {
         const element = document.getElementById(elementId);
         element.textContent = message;
@@ -210,22 +354,85 @@
         }, 3000);
     }
 
-    // Show loading state
+    /**
+     * Show/hide loading indicator
+     * @param {boolean} show - Whether to show loading indicator
+     */
     function showLoading(show) {
         document.getElementById('loading').style.display = show ? 'block' : 'none';
     }
 
-    // Fetch all notes
+    /**
+     * Build query parameters for API call
+     * @returns {string} Query string for API call
+     */
+    function buildQueryParams() {
+        const params = new URLSearchParams({
+            page: currentPage,
+            size: pageSize,
+            sort: `${sortField},${sortDirection}`
+        });
+        return `?${params.toString()}`;
+    }
+
+    /**
+     * Update pagination controls state
+     */
+    function updatePaginationControls() {
+        document.getElementById('currentPage').textContent = currentPage + 1;
+        document.getElementById('paginationInfo').textContent =
+            `Page ${currentPage + 1} of ${totalPages} (${totalElements} total notes)`;
+
+        // Enable/disable navigation buttons
+        document.getElementById('firstPage').disabled = currentPage === 0;
+        document.getElementById('prevPage').disabled = currentPage === 0;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages - 1;
+        document.getElementById('lastPage').disabled = currentPage >= totalPages - 1;
+
+        // Show controls only if there are multiple pages
+        document.getElementById('controlsBar').style.display = totalPages > 1 ? 'flex' : 'none';
+    }
+
+    // ==============================================
+    // API CALLS & DATA FETCHING
+    // ==============================================
+
+    /**
+     * Fetch notes from server with pagination and sorting
+     */
     async function fetchNotes() {
         showLoading(true);
         try {
-            const response = await fetch(BASE_URL);
+            const queryParams = buildQueryParams();
+            const response = await fetch(`${BASE_URL}${queryParams}`);
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            allNotes = await response.json();
-            renderNotes(allNotes);
-            updateNoteCount();
+
+            const data = await response.json();
+
+            // Extract pagination metadata from response
+            // Note: Adjust these property names based on your Page<> response structure
+            currentPage = data.number || data.page || 0;
+            totalPages = data.totalPages || 0;
+            totalElements = data.totalElements || data.total || 0;
+            pageSize = data.size || pageSize;
+
+            // Extract notes array from response
+            // Note: Adjust this based on your API response structure
+            const notes = data.content || data.items || data.notes || data;
+
+            // Update UI
+            renderNotes(notes);
+            updatePaginationControls();
+
+            // Store all notes for client-side search
+            // Note: For production, you might want server-side search instead
+            if (currentPage === 0 && totalPages === 1) {
+                allNotes = notes;
+            }
+
         } catch (error) {
             console.error('Error fetching notes:', error);
             showMessage('errorMessage', 'Failed to load notes. Please check if the server is running.');
@@ -234,49 +441,9 @@
         }
     }
 
-    // Render notes to the DOM
-    function renderNotes(notes) {
-        const container = document.getElementById('notes');
-
-        if (notes.length === 0) {
-            const searchQuery = document.getElementById('search').value;
-            const message = searchQuery ?
-                'No notes found matching your search.' :
-                'No notes yet. Create your first note!';
-            container.innerHTML = `<p class="empty-state">${message}</p>`;
-            return;
-        }
-
-        container.innerHTML = '';
-        notes.forEach(note => {
-            const noteElement = document.createElement('div');
-            noteElement.className = 'note';
-            noteElement.innerHTML = `
-                <h3>${escapeHtml(note.title)}</h3>
-                <p>${escapeHtml(note.content)}</p>
-                <small>Created: ${formatDate(note.createdAt)}</small>
-                <div class="note-actions">
-                    <button class="btn-primary" onclick="editNote(${note.id})">Edit</button>
-                    <button class="btn-danger" onclick="deleteNote(${note.id})">Delete</button>
-                </div>
-            `;
-            container.appendChild(noteElement);
-        });
-    }
-
-    // Update note count display
-    function updateNoteCount() {
-        const searchQuery = document.getElementById('search').value;
-        const count = searchQuery ?
-            allNotes.filter(note =>
-                note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                note.content.toLowerCase().includes(searchQuery.toLowerCase())
-            ).length :
-            allNotes.length;
-        document.getElementById('noteCount').textContent = count;
-    }
-
-    // Create a new note
+    /**
+     * Create a new note
+     */
     async function createNote() {
         const title = document.getElementById('title').value.trim();
         const content = document.getElementById('content').value.trim();
@@ -309,8 +476,8 @@
             document.getElementById('content').value = '';
             showMessage('successMessage', 'Note created successfully!');
 
-            // Refresh notes list
-            await fetchNotes();
+            // Refresh notes list (go to first page to show new note)
+            goToFirstPage();
 
         } catch (error) {
             console.error('Error creating note:', error);
@@ -318,7 +485,10 @@
         }
     }
 
-    // Delete a note
+    /**
+     * Delete a note
+     * @param {number} id - Note ID to delete
+     */
     async function deleteNote(id) {
         if (!confirm('Are you sure you want to delete this note?')) {
             return;
@@ -334,7 +504,14 @@
             }
 
             showMessage('successMessage', 'Note deleted successfully!');
-            await fetchNotes();
+
+            // Refresh current page
+            // If current page becomes empty after deletion, go to previous page
+            if (currentPage > 0 && totalElements % pageSize === 1) {
+                goToPreviousPage();
+            } else {
+                fetchNotes();
+            }
 
         } catch (error) {
             console.error('Error deleting note:', error);
@@ -342,7 +519,10 @@
         }
     }
 
-    // Edit a note - fetch fresh data
+    /**
+     * Edit a note - fetch fresh data for editing
+     * @param {number} id - Note ID to edit
+     */
     async function editNote(id) {
         try {
             const response = await fetch(`${BASE_URL}/${id}`);
@@ -365,7 +545,9 @@
         }
     }
 
-    // Update a note
+    /**
+     * Update a note
+     */
     async function updateNote() {
         const title = document.getElementById('editTitle').value.trim();
         const content = document.getElementById('editContent').value.trim();
@@ -397,8 +579,8 @@
             cancelEdit();
             showMessage('successMessage', 'Note updated successfully!');
 
-            // Refresh notes list
-            await fetchNotes();
+            // Refresh current page to show updated note
+            fetchNotes();
 
         } catch (error) {
             console.error('Error updating note:', error);
@@ -406,7 +588,155 @@
         }
     }
 
-    // Cancel editing
+    // ==============================================
+    // RENDERING FUNCTIONS
+    // ==============================================
+
+    /**
+     * Render notes to the DOM
+     * @param {Array} notes - Array of note objects to render
+     */
+    function renderNotes(notes) {
+        const container = document.getElementById('notes');
+
+        if (notes.length === 0) {
+            const searchQuery = document.getElementById('search').value;
+            const message = searchQuery ?
+                'No notes found matching your search.' :
+                'No notes yet. Create your first note!';
+            container.innerHTML = `<p class="empty-state">${message}</p>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        notes.forEach(note => {
+            const noteElement = document.createElement('div');
+            noteElement.className = 'note';
+            noteElement.innerHTML = `
+                <h3>${escapeHtml(note.title)}</h3>
+                <p>${escapeHtml(note.content)}</p>
+                <small>Created: ${formatDate(note.createdAt)}</small>
+                <div class="note-actions">
+                    <button class="btn-primary" onclick="editNote(${note.id})">Edit</button>
+                    <button class="btn-danger" onclick="deleteNote(${note.id})">Delete</button>
+                </div>
+            `;
+            container.appendChild(noteElement);
+        });
+    }
+
+    // ==============================================
+    // PAGINATION CONTROL FUNCTIONS
+    // ==============================================
+
+    /**
+     * Go to specific page
+     * @param {number} page - Page number (0-indexed)
+     */
+    function goToPage(page) {
+        if (page >= 0 && page < totalPages) {
+            currentPage = page;
+            fetchNotes();
+        }
+    }
+
+    /**
+     * Go to first page
+     */
+    function goToFirstPage() {
+        goToPage(0);
+    }
+
+    /**
+     * Go to previous page
+     */
+    function goToPreviousPage() {
+        goToPage(currentPage - 1);
+    }
+
+    /**
+     * Go to next page
+     */
+    function goToNextPage() {
+        goToPage(currentPage + 1);
+    }
+
+    /**
+     * Go to last page
+     */
+    function goToLastPage() {
+        goToPage(totalPages - 1);
+    }
+
+    // ==============================================
+    // SORTING CONTROL FUNCTIONS
+    // ==============================================
+
+    /**
+     * Handle sort field or direction change
+     */
+    function handleSortChange() {
+        sortField = document.getElementById('sortField').value;
+        sortDirection = document.getElementById('sortDirection').value;
+        // Reset to first page when sorting changes
+        goToFirstPage();
+    }
+
+    /**
+     * Handle page size change
+     */
+    function handlePageSizeChange() {
+        pageSize = parseInt(document.getElementById('pageSize').value);
+        // Reset to first page when page size changes
+        goToFirstPage();
+    }
+
+    // ==============================================
+    // SEARCH FUNCTIONALITY
+    // ==============================================
+
+    /**
+     * Search notes (client-side search for now)
+     * Note: For large datasets, implement server-side search
+     */
+    function searchNotes() {
+        const query = document.getElementById('search').value.toLowerCase().trim();
+
+        if (!query) {
+            // If search is cleared, go back to first page with normal sorting
+            goToFirstPage();
+            return;
+        }
+
+        // Client-side search implementation
+        // For production, you should implement server-side search
+        const filtered = allNotes.filter(note =>
+            (note.title && note.title.toLowerCase().includes(query)) ||
+            (note.content && note.content.toLowerCase().includes(query))
+        );
+
+        // Update UI with search results
+        renderNotes(filtered);
+
+        // Update pagination info for search results
+        document.getElementById('paginationInfo').textContent =
+            `Found ${filtered.length} notes matching "${query}"`;
+
+        // Hide pagination controls during search
+        document.getElementById('controlsBar').style.display = 'none';
+    }
+
+    /**
+     * Debounced search function to reduce API calls
+     */
+    function debouncedSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(searchNotes, 300);
+    }
+
+    /**
+     * Cancel editing mode
+     */
     function cancelEdit() {
         editingNoteId = null;
         document.getElementById('editSection').style.display = 'none';
@@ -414,33 +744,15 @@
         document.getElementById('editContent').value = '';
     }
 
-    // Search notes with debouncing
-    function searchNotes() {
-        const query = document.getElementById('search').value.toLowerCase().trim();
+    // ==============================================
+    // INITIALIZATION
+    // ==============================================
 
-        if (!query) {
-            renderNotes(allNotes);
-            updateNoteCount();
-            return;
-        }
-
-        const filtered = allNotes.filter(note =>
-            (note.title && note.title.toLowerCase().includes(query)) ||
-            (note.content && note.content.toLowerCase().includes(query))
-        );
-
-        renderNotes(filtered);
-        updateNoteCount();
-    }
-
-    // Debounced search function
-    function debouncedSearch() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(searchNotes, 300);
-    }
-
-    // Initialize the app
-    document.addEventListener('DOMContentLoaded', () => {
+    /**
+     * Initialize the application
+     */
+    function initApp() {
+        // Load initial notes
         fetchNotes();
 
         // Add keyboard shortcuts
@@ -469,7 +781,10 @@
             .catch(() => {
                 showMessage('errorMessage', 'Cannot connect to server. Make sure the backend is running at ' + BASE_URL);
             });
-    });
+    }
+
+    // Initialize app when DOM is loaded
+    document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
