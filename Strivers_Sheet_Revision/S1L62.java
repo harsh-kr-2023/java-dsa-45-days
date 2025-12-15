@@ -21,7 +21,6 @@ public class S1L62 {
         for (var entry : freq.entrySet()) {
             result.add(Arrays.asList(entry.getKey(), entry.getValue()));
         }
-
         return result;
     }
 
