@@ -9,10 +9,19 @@ public class LeetCode74 {
         // first find the row then binary search for element
         int row = matrix.length;
         int column = matrix[0].length;
-        int start = 0;
-        int end = row;
-        while (start < end) {
-            int mid = start + (end - start) / 2;
- 
+        int low = 0;
+        int high = row * column - 1;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            int midElement = matrix[mid / column][mid % column];
+            if (midElement == target) {
+                return true;
+            } else if (midElement < target) {
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return false;
     }
 }
