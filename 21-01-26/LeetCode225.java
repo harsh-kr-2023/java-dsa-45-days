@@ -1,4 +1,5 @@
 import java.util.Queue;
+import java.util.LinkedList;
 
 public class LeetCode225 {
     public static void main(String[] args) {
@@ -11,35 +12,36 @@ public class LeetCode225 {
         boolean param_4 = obj.empty();
     }
 
+    // Implement Stack using Queues (Linked List)
     static class MyStack {
-        private final Queue<Integer> queue1;
-        private final Queue<Integer> queue2;
+        private Queue<Integer> mainQueue;
+        private Queue<Integer> helperQueue;
 
         public MyStack() {
-            queue1 = new Queue<>();
-            queue2 = new Queue<>();
+            mainQueue = new LinkedList<>();
+            helperQueue = new LinkedList<>();
         }
 
         public void push(int x) {
-            queue2.add(x);
-            while (!queue1.isEmpty()) {
-                queue2.add(queue1.remove());
+            mainQueue.add(x);
+            while (!helperQueue.isEmpty()) {
+                mainQueue.add(helperQueue.remove());
             }
-            Queue<Integer> temp = queue1;
-            queue1 = queue2;
-            queue2 = temp;
+            Queue<Integer> temp = mainQueue;
+            mainQueue = helperQueue;
+            helperQueue = temp;
         }
 
         public int pop() {
-            return queue1.remove();
+            return helperQueue.remove();
         }
 
         public int top() {
-            return queue1.peek();
+            return helperQueue.peek();
         }
 
         public boolean empty() {
-            return queue1.isEmpty();
+            return helperQueue.isEmpty();
         }
     }
 }
