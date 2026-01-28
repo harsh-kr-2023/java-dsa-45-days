@@ -3,7 +3,7 @@ import java.util.Queue;
 import java.util.List;
 import java.util.ArrayList;
 
-public class LevelWiseTraversal {
+public class LeetCode199 {
     public static void main(String[] args) {
         TreeNode root = new TreeNode(1);
         root.left = new TreeNode(2);
@@ -12,16 +12,14 @@ public class LevelWiseTraversal {
         root.left.right = new TreeNode(5);
         root.right.left = new TreeNode(6);
         root.right.right = new TreeNode(7);
-        List<List<Integer>> result = levelWiseTraversal(root);
-        for (List<Integer> level : result) {
-            System.out.println(level);
-        }
+        List<Integer> result = rightSideView(root);
+        System.out.println(result);
     }
 
-    public static List<List<Integer>> levelWiseTraversal(TreeNode root) {
+    public static List<Integer> rightSideView(TreeNode root) {
         List<List<Integer>> result = new LinkedList<>();
         if (root == null) {
-            return result;
+            return new ArrayList<>();
         }
         Queue<TreeNode> queue = new LinkedList<>();
         queue.offer(root);
@@ -40,7 +38,11 @@ public class LevelWiseTraversal {
             }
             result.add(level);
         }
-        return result;
+        List<Integer> rightView = new ArrayList<>();
+        for (List<Integer> level : result) {
+            rightView.add(level.get(level.size() - 1));
+        }
+        return rightView;
     }
     static class TreeNode {
         int val;
