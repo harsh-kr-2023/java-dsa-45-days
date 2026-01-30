@@ -10,22 +10,29 @@ public class LeetCode2073 {
 
     public static int timeRequiredToBuy(int[] tickets, int k) {
         // Using Queue
-        Queue<Integer> queue = new LinkedList<>();
-        for (int ticket : tickets) {
-            queue.offer(ticket);
+        Queue<int[]> queue = new LinkedList<>();
+
+        for (int i = 0; i < tickets.length; i++) {
+            queue.offer(new int[] { i, tickets[i] });
         }
+
         int time = 0;
         while (!queue.isEmpty()) {
-            int currentTicket = queue.poll();
-            System.out.println(currentTicket);
+            int[] curr = queue.poll();
+            int idx = curr[0];
+            int remaining = curr[1];
+
             time++;
-            if (currentTicket > 1) {
-                queue.offer(currentTicket - 1);
+            remaining--;
+
+            if (idx == k && remaining == 0) {
+                return time;
             }
-            if (queue.isEmpty()) {
-                break;
+
+            if (remaining > 0) {
+                queue.offer(new int[] { idx, remaining });
             }
         }
-        return time - 1;
+        return time;
     }
 }
