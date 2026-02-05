@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-02-04T04:36:34.572Z",
+  "reasoning_snapshot": {
+    "problem": "- Given a non-empty array of integers nums, every element appears twice except for one. Find that single one.\nYou must implement a solution with a linear runtime complexity and use only constant extra space.\nINPUT:\n- nums = [1,2,2]\nOUTPUT:\n- 1\nASSUMPTIONS:\n- Each element in the array appears twice except for one element which appears only once.\n1 <= nums.length <= 3 * 10^4\n-3 * 10^4 <= nums[i] <= 3 * 10^4\n-------------------------------------",
+    "brute_force": "- Run a nested for loop and check which element is not repeated\n- Time: O(n^2)\n- Space: O(1)\n- This approach is correct but not acceptable because it does not meet the required linear time constraint\n-------------------------------------",
+    "optimal_approach": "- Technique: XOR\n- Idea: XOR all elements of the array together.\n- Why it works: a ^ a = 0 and a ^ 0 = a, so all paired elements cancel out.\n- Invariant: After processing index i, result stores XOR of elements nums[0..i-1].\n-------------------------------------",
+    "edge_cases": "Minimum length array (n = 1)\n-------------------------------------",
+    "final_complexity": "- Time: O(n)\n- Space: O(1)\n-------------------------------------",
+    "failure_modes": "Assumes exactly one element appears once and all others appear exactly twice\n====================================="
+  },
+  "ollama_feedback": {
+    "critique": [
+      "**CRITIQUE**",
+      "* Weak: The candidate's brute-force approach is not acceptable due to its high time complexity (O(n^2)) without justifying why this approach was considered first.",
+      "* Medium: The optimal approach using XOR is correct, but the explanation could be more detailed and rigorous. Specifically, the candidate should have explicitly stated that a ^ 0 = a, which allows all paired elements to cancel out."
+    ],
+    "follow_up_questions": [
+      "1. Can you explain why the XOR operation works when there are multiple pairs of identical elements in the array?",
+      "2. How would you handle a situation where the input array has exactly one element that appears three times instead of twice?",
+      "3. Is your approach robust against integers outside the specified range (-3 * 10^4 to 3 * 10^4)?"
+    ],
+    "scorecard": {
+      "problem_understanding": "Medium",
+      "brute_force": "Medium",
+      "optimal": "Medium",
+      "edge_cases": "Medium",
+      "failure_modes": "Medium",
+      "overall_risk": "Medium"
+    }
+  }
+}

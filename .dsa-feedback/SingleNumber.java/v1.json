@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-02-04T04:30:48.925Z",
+  "reasoning_snapshot": {
+    "problem": "- Given a non-empty array of integers nums, every element appears twice except for one. Find that single one.\nYou must implement a solution with a linear runtime complexity and use only constant extra space.\nINPUT:\n- nums = [1,2,2]\nOUTPUT:\n- 1\nASSUMPTIONS:\n- Each element in the array appears twice except for one element which appears only once.\n1 <= nums.length <= 3 * 10^4\n-3 * 10^4 <= nums[i] <= 3 * 10^4\n-------------------------------------",
+    "brute_force": "- Run a nested for loop and check which element is not repeated\n- Time: O(n^2)\n- Space: O(1)\n- Not correct because it violates the constraints that solution should be in linear time and constant space\n-------------------------------------",
+    "optimal_approach": "- Technique: XOR\n- Idea: Perform XOR operation on the given array\n- Why it works: Because an elements's XOR with itself is 0 and XOR with 0 is the element itself. So the final result is the single number.\n- Invariant: Solution  is linear time and constant space.\n-------------------------------------",
+    "edge_cases": "- Array with less than or equal to 2 elements\n-------------------------------------",
+    "final_complexity": "- Time: O(n)\n- Space: O(1)\n-------------------------------------",
+    "failure_modes": "- Breaks if more than 1 single number is present in the array\n====================================="
+  },
+  "ollama_feedback": {
+    "critique": [
+      "- Lack of consideration for edge cases (array with less or equal to two elements)",
+      "- Not explicitly stating why a brute force approach violates constraints despite mentioning it as incorrect. While not recommended, lack of justification might mislead interviewer about your understanding that the problem requires linear time and constant space complexity solutions only.",
+      "- Insufficient explanation on how XOR works in finding single number without discussing edge cases or potential problems like multiple non-repeated numbers (failed modes). Not elaborating why it will not break for inputs with more than one unique element could be misleading, as the problem statement specifically mentions that every other element appears twice.",
+      "- Overlooking scenarios where input might contain negative integers and floating points which are usually expected to handle in data structure problems but is beyond DSA typical scope rules here. Not addressing it directly may hint interviewee missed understanding about standard competitive programming assumptions, leading interviewer question on this point as well."
+    ],
+    "follow_up_questions": [
+      "1. What happens if the input array contains negative integers or floating points? Can your XOR approach handle such cases efficiently without violating constraints of linear time complexity and constant space usage? (Testing candidate's understanding about standard assumptions in DSA problems.)",
+      "2. In case there are multiple unique elements instead of just one, how would that affect the performance of using a single pass through data with bitwise operations like XOR? What modifications or checks can be incorporated to ensure we find all such occurrences without compromising on time and space complexity constraints? (Pressing candidate's plan for handling deviations from expected inputs.)",
+      "3. Can you explain how the property of elements appearing twice impacted your choice between using a hash table with extra memory, or bitwise XOR in constant space to find the unique number within O(n) time? Also discuss why maintaining both linear run-time and constant space complexity is crucial here (Examining candidate's strategic thinking about constraints.)"
+    ],
+    "scorecard": {
+      "problem_understanding": "Medium",
+      "brute_force": "Medium",
+      "optimal": "Medium",
+      "edge_cases": "Medium",
+      "failure_modes": "Medium",
+      "overall_risk": "Medium"
+    }
+  }
+}

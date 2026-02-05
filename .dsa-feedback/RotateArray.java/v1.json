@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-02-04T01:52:56.266Z",
+  "reasoning_snapshot": {
+    "problem": "- Given an integer array nums, rotate the array to the right by k steps, where k is non-negative..\nINPUT:\n- nums = [1,2,3,4,5,6,7], k = 3\nOUTPUT:\n- [5,6,7,1,2,3,4]\nASSUMPTIONS / CONSTRAINTS:\n1 <= nums.length <= 10^5\n-2^31 <= nums[i] <= 2^31 - 1\n0 <= k <= 10^5\n-------------------------------------",
+    "brute_force": "- Bring the last element to the front and push the remaining element to right by 1\n- Time: O(n)\n- Space: O(1)\n-\n-------------------------------------",
+    "optimal_approach": "- Technique:\n- Idea:\n- Why it works:\n- Invariant:\n-------------------------------------",
+    "edge_cases": "- k > nums.length\n-\n-\n-------------------------------------",
+    "final_complexity": "- Time:\n- Space:\n-------------------------------------",
+    "failure_modes": "-\n-\n====================================="
+  },
+  "ollama_feedback": {
+    "critique": [
+      "- Brute force approach is straightforward and simple to understand.",
+      "- Idea of bringing the last element forward isn't well explained in terms of array manipulation beyond moving a single element, which may confuse interviewees about continuous rotations required by the problem statement.",
+      "- Edge case handling for when k is greater than nums.length wasn'in discussed or mentioned explicitly during explanation. It’s crucial to clarify that in this scenario, no rotation happens and output remains unchanged as [1, 2, 3, 4, 5, 6, 7].",
+      "- Failing to mention the need for handling negative values of k could lead candidates into misinterpreting problem constraints or suggesting unnecessary additional code. This oversight might result in more complex solutions when simpler ones are possible with proper input validation and understanding edge cases."
+    ],
+    "follow_up_questions": [
+      "1. How would you ensure your approach remains efficient if the size of nums varies significantly, say 0 to 1 million elements?",
+      "2. What data structures or techniques could improve time complexity while still respecting O(n) space constraints for this problem statement without suggesting specific algorithms?",
+      "3. In cases where k is greater than len(nums), what should be the output according to array rotation logic, and why might it differ from common expectations of handling such a scenario in programming problems? ✅"
+    ],
+    "scorecard": {
+      "problem_understanding": "Medium",
+      "brute_force": "Medium",
+      "optimal": "Medium",
+      "edge_cases": "Medium",
+      "failure_modes": "Medium",
+      "overall_risk": "Medium"
+    }
+  }
+}
