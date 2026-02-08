@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-02-07T03:59:44.413Z",
+  "reasoning_snapshot": {
+    "problem": "- Given a string S consisting of only 'a' and 'b', find the minimum count of characters to be deleted to make it balanced.\n- Balanced means no 'a' will appear after 'b'\nINPUT:\n- S = \"aababbab\"\nOUTPUT:\n- 2\nASSUMPTIONS / CONSTRAINTS:\n1 <= s.length <= 10^5\ns[i] is 'a' or 'b'​​.\n-------------------------------------",
+    "brute_force": "- Idea: For every index, find the cost of removing all succeeding a and all preceeding b\n- Time: O(n^2)\n- Space: O(1)\n- Why not optimal? - We are doing same thing twice that is counting all succeeding a and all preceeding b for all indexes.\n-------------------------------------",
+    "optimal_approach": "- Technique: Prefix Sum\n- Idea: Create 2 arrays of prefix_b and suffix_a in one pass and then find the min cost\n- Why it works: If we know that at each index, we do have count of preceeding B and succeeding A then we dont have to calculate it each time.\n- Invariant: After traversing array twice, we do know at each index, what will be the cost of deletion\n-------------------------------------",
+    "edge_cases": "- Look out for edge cases like single character string and empty string and string with only one kind of character.\n-------------------------------------",
+    "final_complexity": "- Time: O(n)\n- Space: O(n)\n-------------------------------------",
+    "failure_modes": "- This approach assumes STRING CONTAINS ONLY 'a' AND 'b' AND WILL FAIL IF THERE ARE ANY OTHER CHARACTERS.\n====================================="
+  },
+  "ollama_feedback": {
+    "critique": [
+      "* Weak: No explicit discussion of how the prefix sum arrays are used to find the minimum cost.",
+      "* Medium: The optimal approach is not clearly explained, and it's assumed that the candidate has sufficient experience with prefix sums."
+    ],
+    "follow_up_questions": [
+      "1. Can you elaborate on how you would use the prefix sum arrays to find the minimum cost? How do these arrays help in avoiding recalculations?",
+      "2. What are some potential edge cases that could affect the correctness of this approach, and how would you handle them?",
+      "3. If the input string contained characters other than 'a' and 'b', how would your optimal approach fail or need to be modified?"
+    ],
+    "scorecard": {
+      "problem_understanding": "Medium",
+      "brute_force": "Medium",
+      "optimal": "Medium",
+      "edge_cases": "Medium",
+      "failure_modes": "Medium",
+      "overall_risk": "Medium"
+    }
+  }
+}
