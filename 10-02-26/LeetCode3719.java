@@ -33,7 +33,8 @@ public class LeetCode3719 {
         }
         return even.size() == odd.size();
     }
-    // Optimised Approach
+
+    // Better Approach
     public static int longestBalanced2(int[] nums) {
         int n = nums.length;
         int max = 0;
@@ -47,6 +48,51 @@ public class LeetCode3719 {
                     odd.add(nums[j]);
                 }
                 if (even.size() == odd.size()) {
+                    max = Math.max(max, j - i + 1);
+                }
+            }
+        }
+        return max;
+    }
+
+    // Optimised Approach
+    public static int longestBalanced3(int[] nums) {
+        int n = nums.length;
+        int max = 0;
+
+        HashMap<Integer, Integer> idMap = new HashMap<>();
+        int[] ids = new int[n];
+        int nextId = 0;
+
+        for (int i = 0; i < n; i++) {
+            Integer id = idMap.get(nums[i]);
+            if (id == null) {
+                id = nextId++;
+                idMap.put(nums[i], id);
+            }
+            ids[i] = id;
+        }
+
+        int[] lastSeen = new int[nextId];
+        Arrays.fill(lastSeen, -1);
+
+        for (int i = 0; i < n; i++) {
+            if (n - i <= max)
+                break; // cannot beat current max
+
+            int distinctEven = 0, distinctOdd = 0;
+
+            for (int j = i; j < n; j++) {
+                int id = ids[j];
+                if (lastSeen[id] != i) { // first time this value appears for this i
+                    lastSeen[id] = i;
+                    if ((nums[j] & 1) == 0)
+                        distinctEven++;
+                    else
+                        distinctOdd++;
+                }
+
+                if (distinctEven == distinctOdd) {
                     max = Math.max(max, j - i + 1);
                 }
             }
