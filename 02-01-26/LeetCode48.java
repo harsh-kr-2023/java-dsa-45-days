@@ -20,6 +20,16 @@ public class LeetCode48 {
                 matrix[j][i] = temp;
             }
         }
+        // print the matrix
+        System.out.println();
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < column; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+        System.out.println();
+        // reverse each row
         for (int i = 0; i < row; i++) {
             for (int j = 0; j < column / 2; j++) {
                 int temp = matrix[i][j];
